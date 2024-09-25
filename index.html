@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <title>Document</title>
+</head>
+<body>
+    <div class="bg-white">
+        <div class="row bg-secondary text-center">
+            <div class="col-12">
+                <h3 class="text-light py-3">Build Your Own PC</h3>
+            </div>
+        </div>
+        <div class="select-section col-12">
+            <form>
+
+                <!-- CPUセクション -->
+                <h4 class="mt-4">step1: Select Your CPU</h4>
+                <div class="row">
+                    <label for="cpuBrandSelect" class="col-1">Brand</label>
+                    <div class="div col-3">
+                        <select class="form-control" id="cpuBrandSelect" required>
+                            <option value="none">-</option>
+                            <option value="Intel">Intel</option>
+                            <option value="AMD">AMD</option>
+                        </select>
+                    </div>
+                    <label for="cpuModelSelect" class="col-1">Model</label>
+                    <div class="col-3">
+                        <select class="form-control" id="cpuModelSelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- GPUセクション -->
+                <h4 class="mt-4">step2: Select Your GPU</h4>
+                <div class="row">
+                    <label for="gpuBrandSelect" class="col-1">Brand</label>
+                    <div class="div col-3">
+                        <select class="form-control" id="gpuBrandSelect" required>
+                            <option>-</option>
+                            <option>Nvidia</option>
+                            <option>AMD</option>
+                            <option>Zotac</option>
+                            <option>Asus</option>
+                            <option>MSI</option>
+                            <option>Gigabyte</option>
+                            <option>EVGA</option>
+                            <option>Sapphire</option>
+                            <option>PowerColor</option>
+                            <option>XFX</option>
+                            <option>ASRock</option>
+                            <option>Gainward</option>
+                            <option>PNY</option>
+                            <option>PwrHis</option>
+                        </select>
+                    </div>
+                    <label for="gpuModelSelect" class="col-1">Model</label>
+                    <div class="col-3">
+                        <select class="form-control" id="gpuModelSelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- ramセクション -->
+                <h4 class="mt-4">step3: Select Your Memory Card</h4>
+                <div class="row">
+                    <label for="ramNumSelect" class="col-1">How many?</label>
+                    <div class="div col-3">
+                        <select class="form-control" id="ramNumSelect" required>
+                            <option>-</option>
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                        </select>
+                    </div>
+                    <label for="ramBrandSelect" class="col-1">Brand</label>
+                    <div class="col-3">
+                        <select class="form-control col-12" id="ramBrandSelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                    <label for="ramModelSelect" class="col-1">Model</label>
+                    <div class="col-3">
+                        <select class="form-control" id="ramModelSelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- storageセクション -->
+                <h4 class="mt-4">step4: Select Your Storage</h4>
+                <div class="row">
+                    <label for="storageTypeSelect" class="col-1">HDD or SSD</label>
+                    <div class="div col-2">
+                        <select class="form-control" id="storageTypeSelect" required>
+                            <option>-</option>
+                            <option>HDD</option>
+                            <option>SSD</option>
+                        </select>
+                    </div>
+                    <label for="storageCapacitySelect" class="col-1">Storage</label>
+                    <div class="col-2">
+                        <select class="form-control" id="storageCapacitySelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                    <label for="storageBrandSelect" class="col-1">Brand</label>
+                    <div class="col-2">
+                        <select class="form-control" id="storageBrandSelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                    <label for="storageModelSelect" class="col-1">Model</label>
+                    <div class="col-2">
+                        <select class="form-control" id="storageModelSelect" required>
+                            <option>-</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-primary px-5 ml-4 mt-4" id="pc-performance-evaluate-btn" type="button">Add PC</button>
+                </div>
+            </form>
+        </div>
+        <div class="mt-4" id="pc-spec-result">
+            
+        </div>
+    </div>
+    <script src="./js/main.js"></script>
+</body>
+</html>
