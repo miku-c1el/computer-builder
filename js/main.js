@@ -38,8 +38,142 @@ const config = {
         "model": "",
         "benchmark": 0
     },
-    count: 1
+    count: 1,
+    
 }
+
+class Computer{
+    componentsName = ["cpu", "gpu", "ram", "storage"];
+    components = {
+        cpu: null,
+        gpu: null,
+        ram: null,
+        storage: null
+    };
+    #num = 0;
+
+    constructor(){
+        this.#num += 1;
+    }
+
+    calculateGamingTotalScore(){
+        
+    }
+
+    calculateWorkingTotalScore(){
+
+    }
+
+    addComponent(){
+        
+    }
+}
+
+class Component{
+    #brand;
+    #model;
+    #benchmarkScore;
+
+    constructor(brand, model, benchmark){
+        this.#brand = brand;
+        this.#model = model;
+        this.#benchmarkScore = benchmark;
+    }
+}
+
+// class CPU extends Component{
+//     constructor(brand, model, benchmark){
+//         super(brand, model, benchmark);
+//     }
+// }
+
+// class GPU extends Component{
+//     constructor(brand, model, benchmark){
+//         super(brand, model, benchmark);
+//     }
+// }
+
+class RAM extends Component{
+    #num;
+    constructor(brand, model, num, benchmark){
+        super(brand, model, benchmark);
+        this.#num = num;
+    }
+}
+
+class Storage extends Component{
+    #type;
+    #capacity;
+
+    constructor(brand, model, type, capacity, benchmark){
+        super(brand, model, benchmark);
+        this.#type = type;
+        this.#capacity = capacity;
+    }
+}
+
+class Controller{
+    #computer = null;
+    getStorageCapacity(){
+
+    }
+
+    /* computerオブジェクトを関数内で定義していることに対する違和感あり。
+    依存性注入を適応した方が良さそう(ボタンが押された時かな?) */
+    getUserSelectedOption(){
+        // compoent = {"componentName": componentObj}
+        this.computer = new Computer();
+        computer.componentsName.forEach((componentName) =>{
+            const brand = document.getElementById("form-select-" + componentName + "-brand");
+            const model = document.getElementById("form-select-cpu-" + componentName + "-model");
+            const benchmark = /* benchmarkを取得する */null;
+
+            // storageオブジェクトの作成
+            if(componentName == "storage"){
+                const type = document.getElementById("form-select-storage-type");
+                const capacity = document.getElementById("form-select-storage-capacity");
+                let component = new Storage(brand, model, type, capacity, benchmark);
+            } else if (componentName == ram){
+                const num = document.getElementById("form-select-ram-num");
+                let component = new RAM(brand, model, num, benchmark);
+            } else {
+                let component = new Component(brand, model);
+            }
+            this.#computer.components[componentName] = component;
+            
+        })
+    }
+}
+
+class View{
+    // function generateCPUModelOptions(cpuBrand){
+    //     cpuModelArr = []
+    
+    //     fetch(config.url+"cpu").then(response=>response.json()).then(function(data){
+    //         for (i in data) {
+    //             if ((data[i].Brand === cpuBrand) && !(cpuModelArr.includes(data[i].Model))) {
+    //                 cpuModelArr.push(data[i].Model);
+    //             };
+    //         };
+    
+    //         let cpuModelSelect = document.getElementById(config.cpuModelSelectId);
+    //         cpuModelSelect.innerHTML = "";
+    //         cpuModelSelect.insertAdjacentHTML('beforeend', generateOptions(cpuModelArr));
+    //     });
+    // };
+
+    function generateDropdownOptions(optionArr) {
+
+        let options = `<option>-</option>`;
+    
+        for (i in optionArr) {
+            options += `<option value='${optionArr[i]}'>${optionArr[i]}</option>`;
+        }
+        // console.log(options);
+        return options;
+    }
+}
+
 
 // CPU Modelのオプションを作成
 function generateCPUModelOptions(cpuBrand){
@@ -386,16 +520,7 @@ function isAllFormFilledIn(){
 }
 
 // オプション作成関数
-function generateOptions(optionArr) {
 
-    let options = `<option>-</option>`;
-
-    for (i in optionArr) {
-        options += `<option value='${optionArr[i]}'>${optionArr[i]}</option>`;
-    }
-    // console.log(options);
-    return options;
-}
 
 function setBenchmarks(parts){
     // console.log(partsInfo[i]);
