@@ -118,21 +118,49 @@ class Controller{
         "cpu": null,
         "gpu": null,
         "ram": null,
-        "hdd": null,
-        "ssd": null
+        "storage": {
+            "hdd": null,
+            "ssd" : null
+        }
     }
 
-    getStorageCapacity(){
-
-    }
-
+    // apiを叩いて各部品のデータを取得する
     static getComponentData(){
         for (let component in this.componentsData){
-            fetch(config.url+component).then(response=>response.json()).then(function(data){
-                console.log(this.componentsData);
-                // this.componentsData[component] = data;
-            });
+            //storageは初期化でssdのデータを取得する
+            if (component == "storage"){
+                for (let storageType in Controller.componentsData["storage"]){
+                    fetch(config.url+storageType).then(response=>response.json()).then(data => {
+                        this.componentsData["storage"][storageType] = data;
+                    });
+                }
+            } else {
+                fetch(config.url+component).then(response=>response.json()).then(data => {
+                    this.componentsData[component] = data;
+                });
+            }
         }
+    }
+
+    static getOptionItems(componentName, label){
+        let optionItems;
+        if (label === "How Many"){
+            optionItems = this.componentsData[componentName].map(component => component["Model"]);
+        } else if (label === "HDD or SSD") {
+            let ssd = this.componentsData[componentName]["ssd"].map(component => component["Type"]);
+            let hdd = this.componentsData[componentName]["hdd"].map(component => component["Type"])
+            optionItems = ssd.concat(hdd);
+        } else if (label === "Storage"){
+            optionItems = this.componentsData[componentName].map(component => component["Model"]);
+        } else {
+            optionItems = this.componentsData[componentName].map(component => component[label]);
+        }
+        // console.log(label);
+        return new Set(optionItems);
+    }
+
+    static filterOptions(){
+
     }
 
     /* computerオブジェクトを関数内で定義していることに対する違和感あり。
@@ -146,44 +174,53 @@ class Controller{
             const benchmark = /* benchmarkを取得する */null;
 
             // storageオブジェクトの作成
+            let component;
             if(componentName == "storage"){
                 const type = document.getElementById("form-select-storage-type");
                 const capacity = document.getElementById("form-select-storage-capacity");
-                let component = new Storage(brand, model, type, capacity, benchmark);
-            } else if (componentName == ram){
+                component = new Storage(brand, model, type, capacity, benchmark);
+            } else if (componentName == "ram"){
                 const num = document.getElementById("form-select-ram-num");
-                let component = new RAM(brand, model, num, benchmark);
+                component = new RAM(brand, model, num, benchmark);
             } else {
-                let component = new Component(brand, model);
+                component = new Component(brand, model);
             }
             this.#computer.components[componentName] = component;
-            
         })
     }
 }
 
 class View{
+    #isInitialized;
     static componentLabels = {
         "cpu": ["Brand", "Model"],
         "gpu": ["Brand", "Model"],
-        "ram": ["How_Many", "Brand", "Model"],
+        "ram": ["How Many", "Brand", "Model"],
         "storage": ["HDD or SSD", "Storage", "Brand", "Model"],
     };
 
+    constructor(){
+        this.#isInitialized = false;
+    }
+
+    get isInitialized(){
+        return this.#isInitialized;
+    }
+
     // オプションを作成
-    static generateDropdownOptions(optionArr) {
+    generateDropdownOptions(optionArr) {
 
         let options = `<option>-</option>`;
     
-        for (let i in optionArr) {
-            options += `<option value='${optionArr[i]}'>${optionArr[i]}</option>`;
+        for (let item of optionArr) {
+            options += `<option value='${item}'>${item}</option>`;
         }
-        // console.log(options);
+
         return options;
     }
 
     // select要素を作成
-    static generateSelectEle(label, component){
+    generateSelectEle(label, component, isInitialized){
         let formGroup = document.createElement("div");
         formGroup.classList.add("form-group", "col-lg-3");
         let labelEle = document.createElement("label");
@@ -193,161 +230,62 @@ class View{
         selectEle.classList.add("form-control");
         selectEle.id = component + label + "Select";
 
-        /* オプションを作成するめの配列を受け取る */
-        let optionArr = ["aaa", "bbb", "ccc"];
-        let options = this.generateDropdownOptions(optionArr);
-        // console.log(options);
-        selectEle.innerHTML = options;
+        // オプションを取得して、select要素に追加する
+        let optionItems;
+        
+        // 初回アクセスの時、
+        if (isInitialized === false){
+            // if(component === "ram" && label != "How Many"){
+            //     console.log(component);
+            //     console.log(label);
+            // }
+
+            if ((component === "ram" && label != "How Many") || (component === "storage" && label != "HDD or SSD") || ((component == "cpu" || component == "gpu") && label != "Brand")){
+                optionItems = [];
+            } else {
+                optionItems = Controller.getOptionItems(component, label);
+            }
+            // console.log("h");
+        } else {
+            optionItems = Controller.getOptionItems(component, label);
+            // console.log("j");
+        }
+        
+        let dropdownOption = this.generateDropdownOptions(optionItems);
+        selectEle.innerHTML = dropdownOption;
+
         formGroup.append(labelEle);
         formGroup.append(selectEle);
-        // console.log(selectEle);
         return formGroup;
     }
 
-    // 各パーツのselection要素を含んだカードを作成
-    static generateComponentSelectionCard(componentName){
+    // 各部品のselection要素を含んだカードを作成
+    generateComponentSelectionCard(componentName){
         // タイトル
-        let title = document.createElement("h4");
-        title.classList.add("mt-4");
-        title.innerHTML = componentName.toUpperCase();
+        let selectTitle = document.createElement("h4");
+        selectTitle.classList.add("mt-4", "border", "border-warning");
+        selectTitle.innerHTML = componentName.toUpperCase();
 
         let row = document.createElement("div");
         row.classList.add("form-row", "border", "border-warning");
 
         let target = document.getElementById("target");
         
-
-        for (let i in this.componentLabels[componentName]){
-            let selectEle = this.generateSelectEle(this.componentLabels[componentName][i], componentName);
+        let labels = View.componentLabels[componentName]
+        for (let i in labels){
+            let selectEle = this.generateSelectEle(labels[i], componentName, this.#isInitialized);
             row.append(selectEle);
         }
 
-        target.append(title);
+        target.append(selectTitle);
         target.append(row);
     }
 
-    static generateSelectPage(){
-        let container = document.createElement('div');
-        container.classList.add("select-section", "col-12");
-
-
-        let ex =
-        `
-                    <!-- CPUセクション -->
-                    <h4 class="mt-4">step1: Select Your CPU</h4>
-                    <div class="row">
-                        <div class="div col-3">
-                            <label for="cpuBrandSelect" class="col-1">Brand</label>
-                            <select class="form-control" id="cpuBrandSelect" required>
-                                <option value="none">-</option>
-                                <option value="Intel">Intel</option>
-                                <option value="AMD">AMD</option>
-                            </select>
-                        </div>
-                        <div class="col-3">
-                            <label for="cpuModelSelect" class="col-1">Model</label>
-                            <select class="form-control" id="cpuModelSelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- GPUセクション -->
-                    <h4 class="mt-4">step2: Select Your GPU</h4>
-                    <div class="row">
-                        <label for="gpuBrandSelect" class="col-1">Brand</label>
-                        <div class="div col-3">
-                            <select class="form-control" id="gpuBrandSelect" required>
-                                <option>-</option>
-                                <option>Nvidia</option>
-                                <option>AMD</option>
-                                <option>Zotac</option>
-                                <option>Asus</option>
-                                <option>MSI</option>
-                                <option>Gigabyte</option>
-                                <option>EVGA</option>
-                                <option>Sapphire</option>
-                                <option>PowerColor</option>
-                                <option>XFX</option>
-                                <option>ASRock</option>
-                                <option>Gainward</option>
-                                <option>PNY</option>
-                                <option>PwrHis</option>
-                            </select>
-                        </div>
-                        <label for="gpuModelSelect" class="col-1">Model</label>
-                        <div class="col-3">
-                            <select class="form-control" id="gpuModelSelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- ramセクション -->
-                    <h4 class="mt-4">step3: Select Your Memory Card</h4>
-                    <div class="row">
-                        <label for="ramNumSelect" class="col-1">How many?</label>
-                        <div class="div col-3">
-                            <select class="form-control" id="ramNumSelect" required>
-                                <option>-</option>
-                                <option>1</option>
-                                <option>2</option>
-                                <option>3</option>
-                                <option>4</option>
-                            </select>
-                        </div>
-                        <label for="ramBrandSelect" class="col-1">Brand</label>
-                        <div class="col-3">
-                            <select class="form-control col-12" id="ramBrandSelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                        <label for="ramModelSelect" class="col-1">Model</label>
-                        <div class="col-3">
-                            <select class="form-control" id="ramModelSelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- storageセクション -->
-                    <h4 class="mt-4">step4: Select Your Storage</h4>
-                    <div class="row">
-                        <label for="storageTypeSelect" class="col-1">HDD or SSD</label>
-                        <div class="div col-2">
-                            <select class="form-control" id="storageTypeSelect" required>
-                                <option>-</option>
-                                <option>HDD</option>
-                                <option>SSD</option>
-                            </select>
-                        </div>
-                        <label for="storageCapacitySelect" class="col-1">Storage</label>
-                        <div class="col-2">
-                            <select class="form-control" id="storageCapacitySelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                        <label for="storageBrandSelect" class="col-1">Brand</label>
-                        <div class="col-2">
-                            <select class="form-control" id="storageBrandSelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                        <label for="storageModelSelect" class="col-1">Model</label>
-                        <div class="col-2">
-                            <select class="form-control" id="storageModelSelect" required>
-                                <option>-</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <button class="btn btn-primary px-5 ml-4 mt-4" id="pc-performance-evaluate-btn" type="button">Add PC</button>
-                    </div>
-            </div>
-            <div class="mt-4" id="pc-spec-result">
-                
-            </div>
-        `;
+    generateSelectPage(){
+        // 各部品のselect要素を作成
+        for (let label in View.componentLabels){
+            this.generateComponentSelectionCard(label);
+        }
     }
     // function generateCPUModelOptions(cpuBrand){
     //     cpuModelArr = []
@@ -812,13 +750,140 @@ function generatePCSpecCard(gaming, working){
     return card;
 }
 
-View.generateComponentSelectionCard("cpu");
-View.generateComponentSelectionCard("gpu");
-View.generateComponentSelectionCard("ram");
-View.generateComponentSelectionCard("storage");
+// View.generateSelectPage();
 
 Controller.getComponentData();
 
 setTimeout(function(){
-    console.log(Controller.componentsData["cpu"]);
+    // let optionArr = [];
+    // for (let i in Controller.componentsData["cpu"]){
+    //     console.log(Controller.componentsData["cpu"][i].Brand);
+    // }
+
+    const view = new View();
+    view.generateSelectPage();
 },300);
+
+
+// Controller.getComponentData();
+
+
+
+
+
+
+//                     <!-- CPUセクション -->
+//                     <h4 class="mt-4">step1: Select Your CPU</h4>
+//                     <div class="row">
+//                         <div class="div col-3">
+//                             <label for="cpuBrandSelect" class="col-1">Brand</label>
+//                             <select class="form-control" id="cpuBrandSelect" required>
+//                                 <option value="none">-</option>
+//                                 <option value="Intel">Intel</option>
+//                                 <option value="AMD">AMD</option>
+//                             </select>
+//                         </div>
+//                         <div class="col-3">
+//                             <label for="cpuModelSelect" class="col-1">Model</label>
+//                             <select class="form-control" id="cpuModelSelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                     </div>
+
+//                     <!-- GPUセクション -->
+//                     <h4 class="mt-4">step2: Select Your GPU</h4>
+//                     <div class="row">
+//                         <label for="gpuBrandSelect" class="col-1">Brand</label>
+//                         <div class="div col-3">
+//                             <select class="form-control" id="gpuBrandSelect" required>
+//                                 <option>-</option>
+//                                 <option>Nvidia</option>
+//                                 <option>AMD</option>
+//                                 <option>Zotac</option>
+//                                 <option>Asus</option>
+//                                 <option>MSI</option>
+//                                 <option>Gigabyte</option>
+//                                 <option>EVGA</option>
+//                                 <option>Sapphire</option>
+//                                 <option>PowerColor</option>
+//                                 <option>XFX</option>
+//                                 <option>ASRock</option>
+//                                 <option>Gainward</option>
+//                                 <option>PNY</option>
+//                                 <option>PwrHis</option>
+//                             </select>
+//                         </div>
+//                         <label for="gpuModelSelect" class="col-1">Model</label>
+//                         <div class="col-3">
+//                             <select class="form-control" id="gpuModelSelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                     </div>
+
+//                     <!-- ramセクション -->
+//                     <h4 class="mt-4">step3: Select Your Memory Card</h4>
+//                     <div class="row">
+//                         <label for="ramNumSelect" class="col-1">How many?</label>
+//                         <div class="div col-3">
+//                             <select class="form-control" id="ramNumSelect" required>
+//                                 <option>-</option>
+//                                 <option>1</option>
+//                                 <option>2</option>
+//                                 <option>3</option>
+//                                 <option>4</option>
+//                             </select>
+//                         </div>
+//                         <label for="ramBrandSelect" class="col-1">Brand</label>
+//                         <div class="col-3">
+//                             <select class="form-control col-12" id="ramBrandSelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                         <label for="ramModelSelect" class="col-1">Model</label>
+//                         <div class="col-3">
+//                             <select class="form-control" id="ramModelSelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                     </div>
+
+//                     <!-- storageセクション -->
+//                     <h4 class="mt-4">step4: Select Your Storage</h4>
+//                     <div class="row">
+//                         <label for="storageTypeSelect" class="col-1">HDD or SSD</label>
+//                         <div class="div col-2">
+//                             <select class="form-control" id="storageTypeSelect" required>
+//                                 <option>-</option>
+//                                 <option>HDD</option>
+//                                 <option>SSD</option>
+//                             </select>
+//                         </div>
+//                         <label for="storageCapacitySelect" class="col-1">Storage</label>
+//                         <div class="col-2">
+//                             <select class="form-control" id="storageCapacitySelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                         <label for="storageBrandSelect" class="col-1">Brand</label>
+//                         <div class="col-2">
+//                             <select class="form-control" id="storageBrandSelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                         <label for="storageModelSelect" class="col-1">Model</label>
+//                         <div class="col-2">
+//                             <select class="form-control" id="storageModelSelect" required>
+//                                 <option>-</option>
+//                             </select>
+//                         </div>
+//                     </div>
+//                     <div class="row">
+//                         <button class="btn btn-primary px-5 ml-4 mt-4" id="pc-performance-evaluate-btn" type="button">Add PC</button>
+//                     </div>
+//             </div>
+//             <div class="mt-4" id="pc-spec-result">
+            
+//             </div>
+//   
