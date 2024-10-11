@@ -127,7 +127,7 @@ class Controller{
     // apiを叩いて各部品のデータを取得する
     static getComponentData(){
         for (let component in this.componentsData){
-            //storageは初期化でssdのデータを取得する
+            //storageの場合は、hhdとssdのそれぞれのデータを取得する
             if (component == "storage"){
                 for (let storageType in Controller.componentsData["storage"]){
                     fetch(config.url+storageType).then(response=>response.json()).then(data => {
@@ -142,25 +142,115 @@ class Controller{
         }
     }
 
+    // メモリの数を取得する
+    static getRamNum(){
+        let ramModelArr = Controller.componentsData["ram"].map(component => component["Model"].split(' '));
+        let ramNumArr = ramModelArr.map(ramModel => ramModel[ramModel.length - 1][0]);
+        return new Set(ramNumArr);
+    }
+
+    //ストレージ容量を取得する
+    static getStorageCapacity(component){
+        let modelArr = Controller.removeParenthesis(component["Model"]).split(' ');
+        return modelArr[modelArr.length - 1];
+    }
+
+    /**
+     * ストレージ関連の関数
+     */
+
+    // HDDのモデルに括弧がある場合は取り除く
+    static removeParenthesis(model){
+        let re = /\s\(.*?\)/;
+        if (re.test(model)) {
+            model = model.replace(model.match(re)[0], "");
+        }
+        return model;
+    }
+
+    // TBをGBに変換する
+    static convertToGB(capacity){
+        let tbRe = /TB/;
+        let gbRe = /GB/;
+        if (tbRe.test(capacity)){
+            capacity = parseFloat(capacity.replace("TB", "")) * 1000;
+        } else if (gbRe.test(capacity)){
+            capacity = parseFloat(capacity.replace("GB", ""));
+        }
+
+        return capacity;
+    }
+
+    // capacityを文字列に変換し、単位を付与する
+    static capacityToString(capacity){
+        if ((capacity / 1000) >= 1) {
+            return String(capacity / 1000) + "TB";
+        } else {
+            return String(capacity) + "GB";
+        }
+    }
+
+    // ストレージ容量の配列を取得する
+    static getStorageCapacityArr(type){
+            let modelArr = Controller.componentsData["storage"][type].map(component => this.removeParenthesis(component["Model"]).split(' '));
+
+            // 容量を全てGBで統一する
+            let capacityArr = modelArr.map(model => Controller.convertToGB(model[model.length - 1]));
+
+            // 降順に並べ替える
+            function compareFn(a, b){
+                return b - a;
+            }
+            capacityArr.sort(compareFn);
+
+            // 文字列に変換し直す
+            capacityArr = capacityArr.map(capacity => Controller.capacityToString(capacity));
+
+            return new Set(capacityArr);
+    }
+
+
+    // オプション要素に表示させる配列を返す
     static getOptionItems(componentName, label){
         let optionItems;
         if (label === "How Many"){
-            optionItems = this.componentsData[componentName].map(component => component["Model"]);
-        } else if (label === "HDD or SSD") {
+            optionItems = this.getRamNum();
+
+        } else if (label === "Type") {
             let ssd = this.componentsData[componentName]["ssd"].map(component => component["Type"]);
-            let hdd = this.componentsData[componentName]["hdd"].map(component => component["Type"])
+            let hdd = this.componentsData[componentName]["hdd"].map(component => component["Type"]);
             optionItems = ssd.concat(hdd);
+
         } else if (label === "Storage"){
-            optionItems = this.componentsData[componentName].map(component => component["Model"]);
+
+            optionItems = this.getStorageCapacityArr("HDD");
+
         } else {
-            optionItems = this.componentsData[componentName].map(component => component[label]);
+            if (label == "Brand"){
+                optionItems = this.componentsData[componentName].map(component => component[label]);
+            } else if (label == "Model") {
+                optionItems = Controller.filterByBrand(label, componentName).map(component => component[label]);
+                console.log(optionItems);
+            }
         }
-        // console.log(label);
+
         return new Set(optionItems);
     }
 
-    static filterOptions(){
-
+    // 絶対にtrueになる条件を返す
+    // 特定の条件の時だけfilterするとかできるん？
+    static filterByBrand(label, componentName){
+        let brand;
+        let brandSelect = document.getElementById(componentName + "BrandSelect");
+        brand = (brandSelect != null) ? brandSelect.value : null;
+        let filterdData;
+        if (label == "Model" && brandSelect != null) {
+            filterdData = this.componentsData[componentName].filter(component => component["Brand"] == brand);
+        } else {
+            filterdData = this.componentsData[componentName];
+        }
+        
+        return filterdData;
     }
 
     /* computerオブジェクトを関数内で定義していることに対する違和感あり。
@@ -219,15 +309,19 @@ class View{
         return options;
     }
 
+    //各コンポーネントの最初のselect要素であるかチェック
+    isFirstSelectElement(component, label) {
+        return ((component == "cpu" || component == "gpu") && label == "Brand") || (component === "ram" && label == "How Many") || (component === "storage" && label == "Type");
+    }
+
     // select要素を作成
     generateSelectEle(label, component, isInitialized){
-        let formGroup = document.createElement("div");
-        formGroup.classList.add("form-group", "col-lg-3");
-        let labelEle = document.createElement("label");
-        labelEle.innerHTML = label;
-
+        
+        if (label == "HDD or SSD") label = "Type";
         let selectEle = document.createElement("select");
         selectEle.classList.add("form-control");
+        selectEle.setAttribute("label", label);
+        selectEle.setAttribute("component", component);
         selectEle.id = component + label + "Select";
 
         // オプションを取得して、select要素に追加する
@@ -235,112 +329,139 @@ class View{
         
         // 初回アクセスの時、
         if (isInitialized === false){
-            // if(component === "ram" && label != "How Many"){
-            //     console.log(component);
-            //     console.log(label);
-            // }
 
-            if ((component === "ram" && label != "How Many") || (component === "storage" && label != "HDD or SSD") || ((component == "cpu" || component == "gpu") && label != "Brand")){
+            // 最初のselect要素以外はoptionの選択肢を"-”のみにする
+            if (!this.isFirstSelectElement(component, label)){
                 optionItems = [];
             } else {
                 optionItems = Controller.getOptionItems(component, label);
             }
-            // console.log("h");
+
+        /* 二回目以降のアクセス  (いらん??)*/
         } else {
             optionItems = Controller.getOptionItems(component, label);
-            // console.log("j");
         }
         
         let dropdownOption = this.generateDropdownOptions(optionItems);
         selectEle.innerHTML = dropdownOption;
 
-        formGroup.append(labelEle);
-        formGroup.append(selectEle);
-        return formGroup;
+        return selectEle;
     }
 
     // 各部品のselection要素を含んだカードを作成
     generateComponentSelectionCard(componentName){
-        // タイトル
-        let selectTitle = document.createElement("h4");
-        selectTitle.classList.add("mt-4", "border", "border-warning");
-        selectTitle.innerHTML = componentName.toUpperCase();
+        // コンポーネント名を作成
+        let componentTitle = document.createElement("h4");
+        componentTitle.classList.add("mt-4", "border", "border-warning");
+        componentTitle.innerHTML = componentName.toUpperCase()
 
+        // form-rowを作成
         let row = document.createElement("div");
-        row.classList.add("form-row", "border", "border-warning");
-
-        let target = document.getElementById("target");
+        row.classList.add("form-row", "border", "border-success");
         
-        let labels = View.componentLabels[componentName]
-        for (let i in labels){
-            let selectEle = this.generateSelectEle(labels[i], componentName, this.#isInitialized);
-            row.append(selectEle);
+        // ラベルごとにselect要素を作成
+        let labels = View.componentLabels[componentName];
+        for (let label of labels){
+            let labelEle = document.createElement("label");
+            labelEle.innerHTML = label;
+
+            let formGroup = document.createElement("div");
+            formGroup.classList.add("form-group", "col-lg-3");
+
+            let selectEle = this.generateSelectEle(label, componentName, this.#isInitialized);
+            formGroup.append(label);
+            formGroup.append(selectEle);
+            row.append(formGroup);
+
+            // イベントリスナーの作成
+            selectEle.addEventListener('change', e => {
+                let label = selectEle.getAttribute("label");
+                if (label === "Brand") {
+                    this.displayModelOptions(componentName);
+                } else if (label === "Type") {
+                    this.displayStorageOptions();
+                } else if (label === "Storage"){
+                    this.displayStorageBrandOptions();
+                }
+            });
         }
 
-        target.append(selectTitle);
+        let target = document.getElementById("target");
+        target.append(componentTitle);
         target.append(row);
+    }
+
+
+    
+    /**
+     *  各componentのラベルごとのオプション表示のための関数
+     */
+
+    displayModelOptions(componentName){
+        let targetEle = document.getElementById(componentName + "ModelSelect");
+        targetEle.innerHTML = "";
+        let optionItems = Controller.getOptionItems(componentName, "Model");
+        targetEle.insertAdjacentHTML('beforeend', this.generateDropdownOptions(optionItems));
+    }
+
+    displayStorageOptions(){
+        // storageの種類を取得
+        let type = document.getElementById("storageTypeSelect").value.toLowerCase();
+
+        let targetEle = document.getElementById("storageStorageSelect");
+        targetEle.innerHTML = "";
+        let optionItems = Controller.getStorageCapacityArr(type);
+        targetEle.insertAdjacentHTML('beforeend', this.generateDropdownOptions(optionItems));
+    }
+
+    displayStorageBrandOptions(){
+        // 選択されたtypeとcapacityを取得する
+        let type = document.getElementById("storageTypeSelect").value.toLowerCase();
+        let capacity = document.getElementById("storageStorageSelect").value;
+        console.log(capacity);
+
+        // typeとcapacityが同じブランドの配列を受け取る
+        let storageArr = Controller.componentsData["storage"][type].filter(component => Controller.getStorageCapacity(component) === capacity);
+
+        // モデル名のみを含む配列を作成
+        let optionItems = storageArr.map(storage => storage["Brand"]);
+        // console.log(optionItems);
+
+        let targetEle = document.getElementById("storageBrandSelect");
+        targetEle.innerHTML = "";
+        targetEle.insertAdjacentHTML('beforeend', this.generateDropdownOptions(optionItems));
     }
 
     generateSelectPage(){
         // 各部品のselect要素を作成
-        for (let label in View.componentLabels){
-            this.generateComponentSelectionCard(label);
+        for (let component in View.componentLabels){
+            this.generateComponentSelectionCard(component);
         }
+
+        this.createAddBtn();
+        this.#isInitialized = true;
     }
-    // function generateCPUModelOptions(cpuBrand){
-    //     cpuModelArr = []
-    
-    //     fetch(config.url+"cpu").then(response=>response.json()).then(function(data){
-    //         for (i in data) {
-    //             if ((data[i].Brand === cpuBrand) && !(cpuModelArr.includes(data[i].Model))) {
-    //                 cpuModelArr.push(data[i].Model);
-    //             };
-    //         };
-    
-    //         let cpuModelSelect = document.getElementById(config.cpuModelSelectId);
-    //         cpuModelSelect.innerHTML = "";
-    //         cpuModelSelect.insertAdjacentHTML('beforeend', generateOptions(cpuModelArr));
-    //     });
-    // };
 
+    createAddBtn(){
+        let row = document.createElement("div");
+        row.classList.add("row");
 
+        let btn = document.createElement("btn");
+        btn.classList.add("btn", "btn-primary", "ml-3", "mt-3", "col-md-2");
+        btn.id = "pc-performance-evaluate-btn";
+        btn.innerHTML = "Add PC";
+        
+        let target = document.getElementById("target");
+        row.append(btn);
+
+        target.append(row);
+    }
 }
 
 
-// CPU Modelのオプションを作成
-function generateCPUModelOptions(cpuBrand){
-    cpuModelArr = []
 
-    fetch(config.url+"cpu").then(response=>response.json()).then(function(data){
-        for (i in data) {
-            if ((data[i].Brand === cpuBrand) && !(cpuModelArr.includes(data[i].Model))) {
-                cpuModelArr.push(data[i].Model);
-            };
-        };
 
-        let cpuModelSelect = document.getElementById(config.cpuModelSelectId);
-        cpuModelSelect.innerHTML = "";
-        cpuModelSelect.insertAdjacentHTML('beforeend', generateOptions(cpuModelArr));
-    });
-};
 
-// GPU Modelのオプションを作成
-function generateGPUModelOptions(gpuBrand){
-    gpuModelArr = []
-
-    fetch(config.url+"gpu").then(response=>response.json()).then(function(data){
-        for (i in data) {
-            if ((data[i].Brand === gpuBrand) && !(gpuModelArr.includes(data[i].Model))) {
-                
-                gpuModelArr.push(data[i].Model);
-            };
-        };
-
-        let gpuModelSelect = document.getElementById(config.gpuModelSelectId);
-        gpuModelSelect.innerHTML = "";
-        gpuModelSelect.insertAdjacentHTML('beforeend', generateOptions(gpuModelArr));
-    });
-};
 
 // RAM Brandのオプションを作成
 function generateRAMBrandOptions(ramNum){
@@ -384,85 +505,7 @@ function generateRAMModelOptions(ramBrand, ramNum){
 };
 
 //  Storage容量のオプションを作成
-function generateStorageCapacityOptions(storageType){
-    let storageCapacityArr = []
 
-    // capacityを降順に並び替えるための関数
-    function compareFn(a, b){
-        return b - a;
-    }
-
-    if (storageType === "HDD"){
-        fetch(config.url+"hdd").then(response=>response.json()).then(function(data){
-            for (i in data) {
-                let model = data[i].Model;
-                insertIntCapacity(model, storageCapacityArr);
-            };
-            // console.log(storageCapacityArr);
-
-            // capacityを降順に並び替えて、単位を付与し直す
-            storageCapacityArr.sort(compareFn);
-            for (let i = 0; i < storageCapacityArr.length; i++){
-                storageCapacityArr[i] = capacityToString(storageCapacityArr[i]);
-            }
-
-            let storageCapacitySelect = document.getElementById(config.storageCapacitySelectId);
-            storageCapacitySelect.innerHTML = "";
-            storageCapacitySelect.insertAdjacentHTML('beforeend', generateOptions(storageCapacityArr));
-        });
-    } else {
-        fetch(config.url+"ssd").then(response=>response.json()).then(function(data){
-            for (i in data) {
-                let model = data[i].Model;
-                insertIntCapacity(model, storageCapacityArr);
-            };
-
-            // capacityを降順に並び替えて、単位を付与し直す
-            storageCapacityArr.sort(compareFn);
-            for (let i = 0; i < storageCapacityArr.length; i++){
-                storageCapacityArr[i] = capacityToString(storageCapacityArr[i]);
-            }
-
-            let storageCapacitySelect = document.getElementById(config.storageCapacitySelectId);
-            storageCapacitySelect.innerHTML = "";
-            storageCapacitySelect.insertAdjacentHTML('beforeend', generateOptions(storageCapacityArr));
-        });
-    }
-};
-
-// capacityから単位を取り除いて、配列に格納する（後で降順に並べ替えられるようにするため）
-function insertIntCapacity(storageModel, arr){
-    // HDDモデルの容量に（）がついていた場合は、除去する
-    let re = /\s\(.*?\)/;
-    if (re.test(storageModel)) {
-        storageModel = storageModel.replace(storageModel.match(re)[0], "");
-    }
-
-    let splitModelName = storageModel.split(" ");
-    let capacity = splitModelName[splitModelName.length - 1];
-
-    let tbRe = /TB/;
-    let gbRe = /GB/;
-    if (tbRe.test(capacity)){
-        capacity = parseFloat(capacity.replace("TB", "")) * 1000;
-    } else if (gbRe.test(capacity)){
-        capacity = parseFloat(capacity.replace("GB", ""));
-    }
-
-    if (!(arr.includes(capacity))){
-        arr.push(capacity);
-    };
-    return arr;
-}
-
-// capacityを文字列に変換し、単位を付与する
-function capacityToString(capacity){
-    if ((capacity / 1000) >= 1) {
-        return String(capacity / 1000) + "TB";
-    } else {
-        return String(capacity) + "GB";
-    }
-}
 
 function generateStorageBrandOptions(storageType, capacity){
     storageBrandArr = []
@@ -759,10 +802,11 @@ setTimeout(function(){
     // for (let i in Controller.componentsData["cpu"]){
     //     console.log(Controller.componentsData["cpu"][i].Brand);
     // }
-
     const view = new View();
     view.generateSelectPage();
+
 },300);
+
 
 
 // Controller.getComponentData();
@@ -887,3 +931,4 @@ setTimeout(function(){
             
 //             </div>
 //   
+
