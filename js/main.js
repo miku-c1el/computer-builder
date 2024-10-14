@@ -27,22 +27,27 @@ class Computer{
             let type = document.getElementById("storageTypeSelect").value.toLowerCase();
             let capacity = document.getElementById("storageStorageSelect").value;
 
-            let benchmark;
-            let component;
-
-            benchmark = Controller.getBenchmark(key, brand, model, ramNum, type, capacity);
-            if (key === "ram"){
-                component = new RAM(brand, model, ramNum, benchmark);
-            } else if (key === "storage"){
-                component = new Storage(brand, model, type, capacity, benchmark);
+            if (!View.isSelected(brand, model, ramNum, type, capacity, key)){
+                alert("全ての項目を選択してください");
+                break;
             } else {
-                component = new Component(brand, model, benchmark);
-            }
+                let benchmark;
+                let component;
+    
+                benchmark = Controller.getBenchmark(key, brand, model, ramNum, type, capacity);
+                if (key === "ram"){
+                    component = new RAM(brand, model, ramNum, benchmark);
+                } else if (key === "storage"){
+                    component = new Storage(brand, model, type, capacity, benchmark);
+                } else {
+                    component = new Component(brand, model, benchmark);
+                }
 
-            console.log(key);
-            console.log(component);
-            this.components[key] = component;
-            console.log(this.components[key]);
+                console.log(key);
+                console.log(component);
+                this.components[key] = component;
+                console.log(this.components[key]);
+            }
         }
     }
     // computePcSpec(){
@@ -88,18 +93,6 @@ class Component{
         this.benchmark = benchmark;
     }
 }
-
-// class CPU extends Component{
-//     constructor(brand, model, benchmark){
-//         super(brand, model, benchmark);
-//     }
-// }
-
-// class GPU extends Component{
-//     constructor(brand, model, benchmark){
-//         super(brand, model, benchmark);
-//     }
-// }
 
 class RAM extends Component{
     num;
@@ -539,12 +532,29 @@ class View{
         target.append(row);
 
         btn.addEventListener('click', e => {
-            let computer = new Computer();
-            computer.createComponents();
-            console.log(computer.components);
-            console.log(computer.calculateGamingTotalScore());
-            console.log(computer.calculateWorkingTotalScore());
+            try {
+                let computer = new Computer();
+                computer.createComponents();
+                console.log(computer.components);
+                console.log(computer.calculateGamingTotalScore());
+                console.log(computer.calculateWorkingTotalScore());
+            } catch(error) {
+                /** エラーをキャッチしたい後の挙動を考える */
+                console.log(error);
+            }
+
         })
+    }
+
+    //Select要素が選択されているかチェックする
+    static isSelected(brand, model, ramNum, type, capacity, componentName){
+        if (componentName === "ram"){
+            return brand != "-" && model != "-" && ramNum != "-";
+        } else if (componentName === "storage"){
+            return brand != "-" && model != "-" && type != "-" && capacity != "-";
+        } else {
+            return brand != "-" && model != "-";
+        }
     }
 }
 
@@ -590,8 +600,6 @@ function generateRAMModelOptions(ramBrand, ramNum){
 };
 
 //  Storage容量のオプションを作成
-
-
 function generateStorageBrandOptions(storageType, capacity){
     storageBrandArr = []
     fetch(config.url+storageType.toLowerCase()).then(response=>response.json()).then(function(data){
@@ -646,30 +654,7 @@ function generateStorageModelOptions(storageType, capacity, brand){
     });
 }
 
-//全ての項目が選択されているかチェックする
-function isAllFormFilledIn(){
-    let selectItems = [
-        config.cpuBrandSelectId, 
-        config.cpuModelSelectId, 
-        config.gpuBrandSelectId, 
-        config.gpuModelSelectId, 
-        config.ramNumSelectId, 
-        config.ramBrandSelectId, 
-        config.ramModelSelectId, 
-        config.storageTypeSelectId, 
-        config.storageCapacitySelectId, 
-        config.storageBrandSelectId, 
-        config.storageModelSelectId
-    ];
 
-    for (let i = 0; i < selectItems.length; i++){
-        if (document.getElementById(selectItems[i]).selectedIndex === 0){
-            alert("Please fill in all forms.");
-            return false;
-        };
-    };
-    return true;
-}
 
 // オプション作成関数
 
