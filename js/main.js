@@ -13,10 +13,10 @@ class Computer{
         storage: null
     };
 
-    #num = 0;
+    static num = 0;
 
     constructor(){
-        this.#num += 1;
+        Computer.num += 1;
     }
 
     createComponents(){
@@ -50,14 +50,7 @@ class Computer{
             }
         }
     }
-    // computePcSpec(){
-    //     // cardの作成
-    //         let card = generatePCSpecCard(gaming, working);
-    //         let target = document.getElementById("pc-spec-result");
-    //         target.append(card);
-    //         config.count += 1;
-    //     }, 500);
-    // }
+
     calculateGamingTotalScore(){
         let gaming = 0;
         console.log(this.components.cpu.benchmark);
@@ -536,8 +529,19 @@ class View{
                 let computer = new Computer();
                 computer.createComponents();
                 console.log(computer.components);
-                console.log(computer.calculateGamingTotalScore());
-                console.log(computer.calculateWorkingTotalScore());
+                let target = document.getElementById("target");
+                let card = View.generatePCSpecCard(computer.calculateGamingTotalScore(), computer.calculateWorkingTotalScore(), computer);
+                target.insertAdjacentElement('beforeend', card);
+
+
+                    // computePcSpec(){
+    //     // cardの作成
+    //         let card = generatePCSpecCard(gaming, working);
+    //        
+    //         target.append(card);
+    //         config.count += 1;
+    //     }, 500);
+    // }
             } catch(error) {
                 /** エラーをキャッチしたい後の挙動を考える */
                 console.log(error);
@@ -555,6 +559,60 @@ class View{
         } else {
             return brand != "-" && model != "-";
         }
+    }
+
+    static generatePCSpecCard(gaming, working, computer){
+        let card = document.createElement("div");
+        card.classList.add("d-flex", "justify-content-center", "mt-5");
+        let htmlString =
+        `
+            <div class="col-10">
+                <div class="card">
+                    <h3 class="card-header text-center">Your PC ${Computer.num}</h3>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <h3 class="col-6">Gaming: ${gaming}%</h3>
+                            <h3 class="col-6">Working: ${working}%</h3>
+                        </div>
+                        <div class="row mt-3">
+                            <table class="table table-striped text-center">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th scope="col">Parts</th>
+                                        <th scope="col">Brand</th>
+                                        <th scope="col">Model</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">CPU</th>
+                                        <td>${computer.components["cpu"]["brand"]}</td>
+                                        <td>${computer.components["cpu"]["model"]}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">GPU</th>
+                                        <td>${computer.components["gpu"]["brand"]}</td>
+                                        <td>${computer.components["gpu"]["model"]}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Memory</th>
+                                        <td>${computer.components["ram"]["brand"]}</td>
+                                        <td>${computer.components["ram"]["model"]}</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">${computer.components["storage"]["type"].toUpperCase()}</th>
+                                        <td>${computer.components["storage"]["brand"]}</td>
+                                        <td>${computer.components["storage"]["model"]}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        card.innerHTML = htmlString;
+        return card;
     }
 }
 
@@ -673,59 +731,7 @@ function setBenchmarks(parts){
 
 
 
-function generatePCSpecCard(gaming, working){
-    let card = document.createElement("div");
-    card.classList.add("d-flex", "justify-content-center", "mt-4");
-    let htmlString =
-    `
-        <div class="col-8">
-            <div class="card">
-                <h3 class="card-header text-center">Your PC ${config.count}</h3>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <h3 class="col-6">Gaming: ${gaming}%</h3>
-                        <h3 class="col-6">Working: ${working}%</h3>
-                    </div>
-                    <div class="row mt-3">
-                        <table class="table table-striped text-center">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th scope="col">Parts</th>
-                                    <th scope="col">Brand</th>
-                                    <th scope="col">Model</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th scope="row">CPU</th>
-                                    <td>${config["cpu"]["brand"]}</td>
-                                    <td>${config["cpu"]["model"]}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">GPU</th>
-                                    <td>${config["gpu"]["brand"]}</td>
-                                    <td>${config["gpu"]["model"]}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Memory</th>
-                                    <td>${config["ram"]["brand"]}</td>
-                                    <td>${config["ram"]["model"]}</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">${config.storageType}</th>
-                                    <td>${config[config.storageType === "HDD" ? "hdd" : "ssd"]["brand"]}</td>
-                                    <td>${config[config.storageType === "HDD" ? "hdd" : "ssd"]["model"]}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    card.innerHTML = htmlString;
-    return card;
-}
+
 
 // View.generateSelectPage();
 

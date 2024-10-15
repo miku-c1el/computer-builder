@@ -1,0 +1,88 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-image: url("bg_image/bg_midium.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    height: 100vh;
+    position: relative;
+}
+.contents{
+    color: aliceblue;
+    position: absolute;
+    top: 40%;
+    transform: translateX(30%);
+    font-family: "Playfair Display", serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+}
+        
+.create-btn {
+    background-image: linear-gradient(to right, #9a94e1 0%, #8ed4e7  51%, #9a94e1 100%);
+    margin: 3rem;
+    padding: 10px 45px;
+    text-align: center;
+    transition: 0.5s;
+    background-size: 200% auto;
+    color: #070d29;  
+    font-size: 1.2rem;
+    font-weight: bolder;          
+    border-radius: 10px;
+    border: none;
+    display: block;
+}
+
+  .create-btn:hover {
+    background-position: right center;
+    color: #070d29;
+    text-decoration: none;
+}
+
+@media screen and (max-width: 764px) {
+    body {
+        background-image: url("bg_image/bg-small.png");
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        height: 100vh;
+        width: 100%;
+        position: relative;
+    }
+
+    .contents {
+        width: 90%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .create-btn {
+        background-image: linear-gradient(to right, #9a94e1 0%, #8ed4e7  51%, #9a94e1 100%);
+        padding: 10px 10px;
+        text-align: center;
+        transition: 0.5s;
+        background-size: 200% auto;
+        color: #070d29;  
+        font-size: 18px;
+        font-weight: bolder;          
+        border-radius: 10px;
+        border: none;
+        display: block;
+        margin: 4rem auto;
+        width: 40%;
+    }
+    
+    .create-btn:hover {
+        background-position: right center;
+        color: #070d29;
+        text-decoration: none;
+    }
+}
+ 
+  
