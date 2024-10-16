@@ -1,0 +1,27 @@
+body {
+    background-image: url("../bg_image/bg_build_pc.png");
+    background-position: center;
+    background-attachment: fixed;
+    background-size: cover;
+    height: 100vh;
+    position: relative;
+    color: white;
+}
+
+/* #bg {
+    background-color: rgba(255, 255, 255, 0.13);
+} */
+
+.form-control, .form-control:focus {
+    border: 1px solid rgba(0,0,0,.25);
+    border-radius: 2px;
+    background: rgba(0,0,0,.3);
+    box-shadow: rgba(0,0,0,.15) 0 1px 0;
+    color: rgba(255,255,255,.8);
+    border: 1px solid thistle;
+}
+
+h4 {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid white;
+}

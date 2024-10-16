@@ -407,17 +407,18 @@ class View{
     generateComponentSelectionCard(componentName){
         // コンポーネント名を作成
         let componentTitle = document.createElement("h4");
-        componentTitle.classList.add("mt-4", "border", "border-warning");
+        componentTitle.classList.add("mt-4");
         componentTitle.innerHTML = componentName.toUpperCase()
 
         // form-rowを作成
         let row = document.createElement("div");
-        row.classList.add("form-row", "border", "border-success");
+        row.classList.add("form-row", "mt-4");
         
         // ラベルごとにselect要素を作成
         let labels = View.componentLabels[componentName];
         for (let label of labels){
             let labelEle = document.createElement("label");
+            labelEle.classList.add("mb-3");
             labelEle.innerHTML = label;
 
             let formGroup = document.createElement("div");
@@ -616,103 +617,6 @@ class View{
     }
 }
 
-// RAM Brandのオプションを作成
-function generateRAMBrandOptions(ramNum){
-    ramBrandArr = []
-    fetch(config.url+"ram").then(response=>response.json()).then(function(data){
-        for (i in data) {
-            let splitModelName = data[i].Model.split(" ");
-            let memorySlotNum = splitModelName[splitModelName.length - 1][0];
-
-            if (ramNum === memorySlotNum && !(ramBrandArr.includes(data[i].Brand))) {
-                ramBrandArr.push(data[i].Brand);
-            };
-        };
-
-        let ramBrandSelect = document.getElementById(config.ramBrandSelectId);
-        ramBrandSelect.innerHTML = "";
-        ramBrandSelect.insertAdjacentHTML('beforeend', generateOptions(ramBrandArr));
-    });
-}
-
-// RAM Modelのオプションを作成
-function generateRAMModelOptions(ramBrand, ramNum){
-    ramModelArr = []
-
-    fetch(config.url+"ram").then(response=>response.json()).then(function(data){
-        for (i in data) {
-            let splitModelName = data[i].Model.split(" ");
-            // console.log(splitModelName[splitModelName.length - 1][0]);
-            let memorySlotNum = splitModelName[splitModelName.length - 1][0];
-
-            // if (ramNum === memorySlotNum && !(ramBrandArr.includes(data[i].Brand))) {
-            if ((data[i].Brand === ramBrand) && ramNum === memorySlotNum && !(ramModelArr.includes(data[i].Model))) {
-                ramModelArr.push(data[i].Model);
-            };
-        };
-
-        let ramModelSelect = document.getElementById(config.ramModelSelectId);
-        ramModelSelect.innerHTML = "";
-        ramModelSelect.insertAdjacentHTML('beforeend', generateOptions(ramModelArr));
-    });
-};
-
-//  Storage容量のオプションを作成
-function generateStorageBrandOptions(storageType, capacity){
-    storageBrandArr = []
-    fetch(config.url+storageType.toLowerCase()).then(response=>response.json()).then(function(data){
-        for (i in data) {
-            // console.log(data[i]);
-            let s = data[i].Brand;
-            let re = /\s\(.*?\)/;
-
-            let model = data[i].Model;
-            if (re.test(model)) {
-                model = model.replace(model.match(re)[0], "");
-            }
-        
-            let splitModelName = model.split(" ");
-            let modelCapacity = splitModelName[splitModelName.length - 1];
-
-            if (!(storageBrandArr.includes(data[i].Brand)) && modelCapacity === capacity) {
-                storageBrandArr.push(data[i].Brand);
-            };
-        };
-
-        let storageBrandSelect = document.getElementById(config.storageBrandSelectId);
-        storageBrandSelect.innerHTML = "";
-        storageBrandSelect.insertAdjacentHTML('beforeend', generateOptions(storageBrandArr));
-    });
-}
-
-function generateStorageModelOptions(storageType, capacity, brand){
-    storageModelArr = []
-    fetch(config.url+storageType.toLowerCase()).then(response=>response.json()).then(function(data){
-        for (i in data) {
-            // console.log(data[i]);
-            let s = data[i].Brand;
-            let re = /\s\(.*?\)/;
-
-            let model = data[i].Model;
-            if (re.test(model)) {
-                model = model.replace(model.match(re)[0], "");
-            }
-        
-            let splitModelName = model.split(" ");
-            let modelCapacity = splitModelName[splitModelName.length - 1];
-
-            if (!(storageModelArr.includes(data[i].Model)) && modelCapacity === capacity && data[i].Brand === brand) {
-                storageModelArr.push(data[i].Model);
-            };
-        };
-
-        let storageModelSelect = document.getElementById(config.storageModelSelectId);
-        storageModelSelect.innerHTML = "";
-        storageModelSelect.insertAdjacentHTML('beforeend', generateOptions(storageModelArr));
-    });
-}
-
-
 
 // オプション作成関数
 
@@ -730,32 +634,10 @@ function setBenchmarks(parts){
 }
 
 
-
-
-
-// View.generateSelectPage();
-
 Controller.getComponentData();
 
 setTimeout(function(){
-    // let optionArr = [];
-    // for (let i in Controller.componentsData["cpu"]){
-    //     console.log(Controller.componentsData["cpu"][i].Brand);
-    // }
     const view = new View();
     view.generateSelectPage();
 },300);
-
-
-
-// Controller.getComponentData();
-
-
-
-
-//             </div>
-//             <div class="mt-4" id="pc-spec-result">
-            
-//             </div>
-//   
 

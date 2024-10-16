@@ -4,7 +4,7 @@
 }
 
 body {
-    background-image: url("bg_image/bg_midium.png");
+    background-image: url("../bg_image/bg_midium.png");
     background-position: center center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -44,7 +44,7 @@ body {
 
 @media screen and (max-width: 764px) {
     body {
-        background-image: url("bg_image/bg-small.png");
+        background-image: url("../bg_image/bg_small.png");
         background-position: center center;
         background-repeat: no-repeat;
         background-size: cover;
