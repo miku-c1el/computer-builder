@@ -261,7 +261,6 @@ class Controller{
         
         } else {
             optionItems = Controller.componentsData[componentName].map(component => component[label]);
-
         }
         
         return new Set(optionItems);
@@ -406,7 +405,7 @@ class View{
     // 各部品のselection要素を含んだカードを作成
     generateComponentSelectionCard(componentName){
         // コンポーネント名を作成
-        let componentTitle = document.createElement("h4");
+        let componentTitle = document.createElement("h5");
         componentTitle.classList.add("mt-4");
         componentTitle.innerHTML = componentName.toUpperCase()
 
@@ -418,14 +417,14 @@ class View{
         let labels = View.componentLabels[componentName];
         for (let label of labels){
             let labelEle = document.createElement("label");
-            labelEle.classList.add("mb-3");
+            labelEle.classList.add("mb-2");
             labelEle.innerHTML = label;
 
             let formGroup = document.createElement("div");
             formGroup.classList.add("form-group", "col-lg-3");
 
             let selectEle = View.generateSelectEle(label, componentName, this.#isInitialized);
-            formGroup.append(label);
+            formGroup.append(labelEle);
             formGroup.append(selectEle);
             row.append(formGroup);
 
@@ -516,7 +515,7 @@ class View{
         row.classList.add("row");
 
         let btn = document.createElement("button");
-        btn.classList.add("btn", "btn-primary", "ml-3", "mt-3", "col-md-2");
+        btn.classList.add("btn", "btn-primary", "ml-md-3", "mt-5", "col-md-2");
         btn.id = "pc-performance-evaluate-btn";
         btn.innerHTML = "Add PC";
         
@@ -534,15 +533,6 @@ class View{
                 let card = View.generatePCSpecCard(computer.calculateGamingTotalScore(), computer.calculateWorkingTotalScore(), computer);
                 target.insertAdjacentElement('beforeend', card);
 
-
-                    // computePcSpec(){
-    //     // cardの作成
-    //         let card = generatePCSpecCard(gaming, working);
-    //        
-    //         target.append(card);
-    //         config.count += 1;
-    //     }, 500);
-    // }
             } catch(error) {
                 /** エラーをキャッチしたい後の挙動を考える */
                 console.log(error);
@@ -564,20 +554,35 @@ class View{
 
     static generatePCSpecCard(gaming, working, computer){
         let card = document.createElement("div");
-        card.classList.add("d-flex", "justify-content-center", "mt-5");
+        card.classList.add("d-flex", "justify-content-center", "p-5");
+        card.id = "card-container";
         let htmlString =
         `
-            <div class="col-10">
+            <div class="col-12 col-lg-8">
                 <div class="card">
                     <h3 class="card-header text-center">Your PC ${Computer.num}</h3>
                     <div class="card-body">
-                        <div class="row text-center">
-                            <h3 class="col-6">Gaming: ${gaming}%</h3>
-                            <h3 class="col-6">Working: ${working}%</h3>
+                        <div class="row d-flex justify-content-center">
+                            <div class="col-8 p-0">
+                                <div class="row justify-content-center p-0">
+                                    <div class="col-6 d-flex justify-content-center p-0">
+                                        <img src="./image/gaming_pc.svg" width="300" class="img-fluid">
+                                    </div>
+                                    <div class="col-6 d-flex justify-content-center p-0">
+                                        <img src="./image/working_pc.svg" width="300" class="img-fluid">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-8 p-0">
+                                <div class="row">          
+                                    <h3 class="col-6 text-center p-0" id="text-percentage">Gaming: ${gaming}%</h3>
+                                    <h3 class="col-6 text-center p-0" id="text-percentage">Working: ${working}%</h3>
+                                </div>
+                            </div>
                         </div>
                         <div class="row mt-3">
-                            <table class="table table-striped text-center">
-                                <thead class="thead-dark">
+                            <table class="table text-center col-12 col-lg-8 mx-auto">
+                                <thead>
                                     <tr>
                                         <th scope="col">Parts</th>
                                         <th scope="col">Brand</th>
@@ -618,24 +623,7 @@ class View{
 }
 
 
-// オプション作成関数
-
-
-function setBenchmarks(parts){
-    // console.log(partsInfo[i]);
-    fetch(config.url+parts).then(response=>response.json()).then(function(data){
-        for (i in data) {
-            if (data[i].Brand === config[parts]["brand"] && data[i].Model === config[parts]["model"]) {
-                // console.log(data[i].Benchmark);
-                config[parts]["benchmark"] = data[i].Benchmark;
-            };
-        };
-    });
-}
-
-
 Controller.getComponentData();
-
 setTimeout(function(){
     const view = new View();
     view.generateSelectPage();

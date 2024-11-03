@@ -1,27 +1,74 @@
 body {
-    background-image: url("../bg_image/bg_build_pc.png");
-    background-position: center;
-    background-attachment: fixed;
-    background-size: cover;
+    background-image: linear-gradient(to right bottom, #0f0d20, #0f0d20, #0f0d20, #0f0d20, #0f0d20, #141427, #191a2f, #1f1f37, #2c2c4a, #3a395d, #484771, #575586);
     height: 100vh;
-    position: relative;
-    color: white;
+    color: #dddef2;
+    background-attachment: fixed;
 }
-
-/* #bg {
-    background-color: rgba(255, 255, 255, 0.13);
-} */
 
 .form-control, .form-control:focus {
-    border: 1px solid rgba(0,0,0,.25);
-    border-radius: 2px;
-    background: rgba(0,0,0,.3);
-    box-shadow: rgba(0,0,0,.15) 0 1px 0;
-    color: rgba(255,255,255,.8);
-    border: 1px solid thistle;
+    border: 0.8px solid #5f789d;
+    border-radius: 5px;
+    background-color: #16162a;
+    color: #dddef2;
 }
 
-h4 {
+h5 {
     padding-bottom: 1rem;
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid #5a596d;
+}
+
+#pc-performance-evaluate-btn {
+    background-image: linear-gradient(to right, #9a94e1 0%, #8ed4e7  51%, #9a94e1 100%);
+    margin: 4rem;
+    padding: 10px 45px;
+    text-align: center;
+    transition: 0.5s;
+    background-size: 200% auto;
+    color: #070d29;  
+    font-weight: bolder;          
+    border-radius: 10px;
+    border: none;
+    display: block;
+}
+
+#pc-performance-evaluate-btn:hover {
+    background-position: right center;
+    color: #070d29;
+    text-decoration: none;
+    border: none;
+}
+
+#card-container {
+    border-top: 0.8px solid #1717181d;
+}
+
+.card {
+    color: #dddef2;
+    background: rgb(68, 46, 93, .1);
+    box-shadow: 0 4px 90px rgba(0,0,0,.5);
+    border: 1px solid #5a596d;
+    border-radius: 15px;
+}
+
+.card-header {
+    background-color: #0f0d20;
+    border-radius: 15px 15px 0 0 !important;
+    border-bottom: 1px solid #5a596d;
+}
+
+th, td {
+    color: #dddef2;
+    border-top: 1px solid #5a596d !important;
+    border-bottom: 1px solid #5a596d !important;
+}
+
+thead {
+    background-color: #0f0d20;
+}
+
+
+@media screen and (max-width: 764px) {
+    h3 {
+        font-size: 1.5rem;
+    }
 }
