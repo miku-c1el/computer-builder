@@ -1,5 +1,6 @@
+import { conf } from "./config.js";
 const config = {
-    url: "https://api.recursionist.io/builder/computers?type=",
+    url: conf.apiUrl,
     count: 1,
     CPU: []
 }
@@ -15,11 +16,9 @@ class Computer{
 
     static num = 0;
 
-    constructor(){
-        Computer.num += 1;
-    }
-
     createComponents(){
+        let isValid = true;
+
         for (let key in this.components){
             let brand = document.getElementById(key + "BrandSelect").value;
             let model = document.getElementById(key + "ModelSelect").value;
@@ -29,6 +28,7 @@ class Computer{
 
             if (!View.isSelected(brand, model, ramNum, type, capacity, key)){
                 alert("全ての項目を選択してください");
+                isValid = false;
                 break;
             } else {
                 let benchmark;
@@ -43,17 +43,19 @@ class Computer{
                     component = new Component(brand, model, benchmark);
                 }
 
-                console.log(key);
-                console.log(component);
                 this.components[key] = component;
-                console.log(this.components[key]);
+                
             }
+        }
+
+        if (isValid) {
+            Computer.num += 1;
         }
     }
 
     calculateGamingTotalScore(){
         let gaming = 0;
-        console.log(this.components.cpu.benchmark);
+        // console.log(this.components.cpu.benchmark);
         gaming +=  this.components.cpu.benchmark * 0.25;
         gaming += this.components.gpu.benchmark * 0.6;
         gaming += this.components.ram.benchmark * 0.125;
@@ -121,44 +123,70 @@ class Controller{
     static getBenchmark(componentName, brand, model, ramNum = null, type = null, capacity = null){
         let componentData;
         if (componentName === "ram"){
-            console.log(ramNum);
+            // console.log(ramNum);
             componentData = Controller.componentsData[componentName].filter(component => component["Brand"] === brand && component["Model"] === model && ramNum === Controller.getRamNum(component));
 
         } else if (componentName === "storage"){
-            console.log(type);
-            console.log(capacity);
+            // console.log(type);
+            // console.log(capacity);
             componentData = Controller.componentsData[componentName][type].filter(component => component["Brand"] === brand && component["Model"] === model && component["Type"].toLowerCase() === type && Controller.getStorageCapacity(component) === capacity);
 
         } else {
-            console.log(Controller.componentsData[componentName]);
-            console.log(brand);
-            console.log(model);
+            // console.log(Controller.componentsData[componentName]);
+            // console.log(brand);
+            // console.log(model);
             componentData = Controller.componentsData[componentName].filter(component => component["Brand"] === brand && component["Model"] === model);
         }
 
-        console.log(componentName);
-        console.log(componentData[0]);
+        // console.log(componentName);
+        // console.log(componentData[0]);
         let benchmark = componentData[0].Benchmark;
         return benchmark;
     }
 
     // apiを叩いて各部品のデータを取得する
-    static getComponentData(){
-        for (let component in this.componentsData){
-            //storageの場合は、hhdとssdのそれぞれのデータを取得する
-            if (component == "storage"){
-                for (let storageType in Controller.componentsData["storage"]){
-                    fetch(config.url+storageType).then(response=>response.json()).then(data => {
-                        this.componentsData["storage"][storageType] = data;
-                    });
+    // static getComponentData(){
+    //     for (let component in this.componentsData){
+    //         //storageの場合は、hhdとssdのそれぞれのデータを取得する
+    //         if (component == "storage"){
+    //             for (let storageType in Controller.componentsData["storage"]){
+    //                 fetch(config.url+storageType).then(response=>response.json()).then(data => {
+    //                     this.componentsData["storage"][storageType] = data;
+    //                 });
+    //             }
+    //         } else {
+    //             fetch(config.url+component).then(response=>response.json()).then(data => {
+    //                 this.componentsData[component] = data;
+    //             });
+    //         }
+    //     }
+    // }
+    static async getComponentData() {
+        const fetchPromises = [];
+    
+        for (let component in this.componentsData) {
+            if (component === "storage") {
+                for (let storageType in this.componentsData["storage"]) {
+                    const promise = fetch(config.url + storageType)
+                        .then(response => response.json())
+                        .then(data => {
+                            this.componentsData["storage"][storageType] = data;
+                        });
+                    fetchPromises.push(promise);
                 }
             } else {
-                fetch(config.url+component).then(response=>response.json()).then(data => {
-                    this.componentsData[component] = data;
-                });
+                const promise = fetch(config.url + component)
+                    .then(response => response.json())
+                    .then(data => {
+                        this.componentsData[component] = data;
+                    });
+                fetchPromises.push(promise);
             }
         }
+    
+        await Promise.all(fetchPromises); // すべての fetch が完了するのを待つ
     }
+    
 
     // メモリの数を格納した配列を取得する
     static getRamNumArr(){
@@ -391,7 +419,7 @@ class View{
                 optionItems = Controller.getOptionItems(component, label);
             }
 
-        /* 二回目以降のアクセス  (いらん??)*/
+        /* 二回目以降のアクセス */
         } else {
             optionItems = Controller.getOptionItems(component, label);
         }
@@ -528,7 +556,7 @@ class View{
             try {
                 let computer = new Computer();
                 computer.createComponents();
-                console.log(computer.components);
+                // console.log(computer.components);
                 let target = document.getElementById("target");
                 let card = View.generatePCSpecCard(computer.calculateGamingTotalScore(), computer.calculateWorkingTotalScore(), computer);
                 target.insertAdjacentElement('beforeend', card);
@@ -623,9 +651,10 @@ class View{
 }
 
 
-Controller.getComponentData();
-setTimeout(function(){
+async function init() {
+    await Controller.getComponentData(); // データ取得が完了するまで待つ
     const view = new View();
     view.generateSelectPage();
-},300);
+}
 
+init();
