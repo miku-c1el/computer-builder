@@ -145,22 +145,6 @@ class Controller{
     }
 
     // apiを叩いて各部品のデータを取得する
-    // static getComponentData(){
-    //     for (let component in this.componentsData){
-    //         //storageの場合は、hhdとssdのそれぞれのデータを取得する
-    //         if (component == "storage"){
-    //             for (let storageType in Controller.componentsData["storage"]){
-    //                 fetch(config.url+storageType).then(response=>response.json()).then(data => {
-    //                     this.componentsData["storage"][storageType] = data;
-    //                 });
-    //             }
-    //         } else {
-    //             fetch(config.url+component).then(response=>response.json()).then(data => {
-    //                 this.componentsData[component] = data;
-    //             });
-    //         }
-    //     }
-    // }
     static async getComponentData() {
         const fetchPromises = [];
     
@@ -540,10 +524,10 @@ class View{
 
     createAddBtn(){
         let row = document.createElement("div");
-        row.classList.add("row");
+        row.classList.add("row",  "justify-content-center", "justify-content-md-start");
 
         let btn = document.createElement("button");
-        btn.classList.add("btn", "btn-primary", "ml-md-3", "mt-5", "col-md-2");
+        btn.classList.add("btn", "btn-primary", "ml-md-3", "mt-md-3", "mt-3", "col-md-2", "col-sm-auto");
         btn.id = "pc-performance-evaluate-btn";
         btn.innerHTML = "Add PC";
         

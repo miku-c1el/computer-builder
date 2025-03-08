@@ -18,9 +18,8 @@ h5 {
 }
 
 #pc-performance-evaluate-btn {
-    background-image: linear-gradient(to right, #9a94e1 0%, #8ed4e7  51%, #9a94e1 100%);
-    margin: 4rem;
-    padding: 10px 45px;
+    background-image: linear-gradient(to right, #9a94e1 0%, #8ed4e7 51%, #9a94e1 100%);
+    padding: 12px 30px;
     text-align: center;
     transition: 0.5s;
     background-size: 200% auto;
@@ -28,7 +27,18 @@ h5 {
     font-weight: bolder;          
     border-radius: 10px;
     border: none;
-    display: block;
+    display: flex;           
+    justify-content: center; 
+    align-items: center;     
+    white-space: nowrap;
+    font-size: 16px;
+}
+
+@media (min-width: 768px) {
+    #pc-performance-evaluate-btn {
+        margin: 0 0 0 1rem;
+        padding: 10px 45px;
+    }
 }
 
 #pc-performance-evaluate-btn:hover {
